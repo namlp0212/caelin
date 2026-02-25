@@ -31,6 +31,11 @@ import { ConceptPackage } from '../../shared/models';
         } @else {
           @for (pkg of packages(); track pkg.id) {
             <div class="card p-6">
+              @if (pkg.thumbnailUrl) {
+                <div class="-mx-6 -mt-6 mb-4 h-32 rounded-t-2xl overflow-hidden">
+                  <img [src]="pkg.thumbnailUrl" alt="" loading="lazy" class="w-full h-full object-cover">
+                </div>
+              }
               <div class="flex items-start justify-between mb-4">
                 <div>
                   <div class="flex items-center gap-2 mb-1">
