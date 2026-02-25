@@ -1,7 +1,0 @@
-{
-  "version": 3,
-  "sources": ["footer.component.ts"],
-  "sourcesContent": ["\n    .social-icon {\n      @apply text-gray-400 hover:text-sakura-300 transition-colors duration-200;\n    }\n    .footer-link {\n      @apply text-gray-400 hover:text-sakura-300 text-sm transition-colors duration-200;\n    }\n  "],
-  "mappings": ";AAEM,CAAA;AAAA,qBAAA;AAAA,SAAA,IAAA,IAAA,IAAA,IAAA,EAAA,IAAA,iBAAA,EAAA;AAAA;IAAA,KAAA;IAAA,gBAAA;IAAA,YAAA;IAAA,qBAAA;IAAA,IAAA;IAAA;AAAA,8BAAA,aAAA,GAAA,EAAA,CAAA,EAAA,GAAA,EAAA;AAAA,uBAAA;AAAyE;AAAzE,CAAA,WAAA;AAAA,qBAAA;AAAA,SAAA,IAAA,IAAA,IAAA,IAAA,EAAA,IAAA,iBAAA,EAAA;AAAyE;AAGzE,CAAA;AAAA,aAAA;AAAA,eAAA;AAAA,qBAAA;AAAA,SAAA,IAAA,IAAA,IAAA,IAAA,EAAA,IAAA,iBAAA,EAAA;AAAA;IAAA,KAAA;IAAA,gBAAA;IAAA,YAAA;IAAA,qBAAA;IAAA,IAAA;IAAA;AAAA,8BAAA,aAAA,GAAA,EAAA,CAAA,EAAA,GAAA,EAAA;AAAA,uBAAA;AAAiF;AAAjF,CAAA,WAAA;AAAA,qBAAA;AAAA,SAAA,IAAA,IAAA,IAAA,IAAA,EAAA,IAAA,iBAAA,EAAA;AAAiF;",
-  "names": []
-}
