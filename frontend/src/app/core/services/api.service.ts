@@ -48,6 +48,10 @@ export class ApiService {
     return this.get<Outfit[]>('/outfits', filters);
   }
 
+  getAdminOutfits(): Observable<Outfit[]> {
+    return this.get<Outfit[]>('/outfits/admin/all');
+  }
+
   getTrendingOutfits(): Observable<Outfit[]> {
     return this.get<Outfit[]>('/outfits/trending');
   }
@@ -63,6 +67,17 @@ export class ApiService {
 
   updateOutfit(id: number, data: Partial<Outfit>): Observable<Outfit> {
     return this.put<Outfit>(`/outfits/${id}`, data);
+  }
+
+  addOutfitImages(id: number, files: File[]): Observable<Outfit> {
+    const fd = new FormData();
+    files.forEach(f => fd.append('images', f));
+    return this.http.post<ApiResponse<Outfit>>(`${this.base}/outfits/${id}/images`, fd)
+      .pipe(map(r => r.data));
+  }
+
+  deleteOutfitImage(imageId: number): Observable<void> {
+    return this.delete<void>(`/outfits/images/${imageId}`);
   }
 
   deleteOutfit(id: number): Observable<void> {
@@ -118,6 +133,20 @@ export class ApiService {
 
   updatePackage(id: number, pkg: Partial<ConceptPackage>): Observable<ConceptPackage> {
     return this.put<ConceptPackage>(`/packages/${id}`, pkg);
+  }
+
+  uploadPackageThumbnail(id: number, file: File): Observable<ConceptPackage> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.http.post<ApiResponse<ConceptPackage>>(`${this.base}/packages/${id}/thumbnail`, fd)
+      .pipe(map(r => r.data));
+  }
+
+  uploadPackageBackground(id: number, file: File): Observable<ConceptPackage> {
+    const fd = new FormData();
+    fd.append('file', file);
+    return this.http.post<ApiResponse<ConceptPackage>>(`${this.base}/packages/${id}/background`, fd)
+      .pipe(map(r => r.data));
   }
 
   deletePackage(id: number): Observable<void> {
