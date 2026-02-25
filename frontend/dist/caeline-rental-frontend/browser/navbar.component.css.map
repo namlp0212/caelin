@@ -1,0 +1,7 @@
+{
+  "version": 3,
+  "sources": ["navbar.component.ts"],
+  "sourcesContent": ["\n    .nav-active { @apply text-sakura-500 font-semibold; }\n  "],
+  "mappings": ";AACkB,CAAA;AAAA,eAAA;AAAA,qBAAA;AAAA,SAAA,IAAA,IAAA,GAAA,IAAA,EAAA,IAAA,iBAAA,EAAA;AAAoC;",
+  "names": []
+}
