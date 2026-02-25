@@ -13,6 +13,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -63,7 +64,7 @@ public class PackageController {
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<ConceptPackage>> update(@PathVariable Long id, @RequestBody ConceptPackage updated) {
-        ConceptPackage pkg = packageRepository.findById(id).orElseThrow();
+        ConceptPackage pkg = packageRepository.findById(id).orElseThrow(() -> new RuntimeException("Package not found: " + id));
         pkg.setName(updated.getName());
         pkg.setDescription(updated.getDescription());
         pkg.setPrice(updated.getPrice());
@@ -89,21 +90,27 @@ public class PackageController {
     @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<ConceptPackage>> uploadThumbnail(
             @PathVariable Long id,
-            @RequestParam MultipartFile file) throws Exception {
-        ConceptPackage pkg = packageRepository.findById(id).orElseThrow();
-        if (pkg.getThumbnailUrl() != null) fileStorageService.delete(pkg.getThumbnailUrl());
+            @RequestParam MultipartFile file) throws IOException {
+        ConceptPackage pkg = packageRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Package not found: " + id));
+        String oldUrl = pkg.getThumbnailUrl();
         pkg.setThumbnailUrl(fileStorageService.store(file, "packages"));
-        return ResponseEntity.ok(ApiResponse.ok("Thumbnail updated", packageRepository.save(pkg)));
+        ConceptPackage saved = packageRepository.save(pkg);
+        if (oldUrl != null) fileStorageService.delete(oldUrl);
+        return ResponseEntity.ok(ApiResponse.ok("Thumbnail updated", saved));
     }
 
     @PostMapping(value = "/{id}/background", consumes = "multipart/form-data")
     @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
     public ResponseEntity<ApiResponse<ConceptPackage>> uploadBackground(
             @PathVariable Long id,
-            @RequestParam MultipartFile file) throws Exception {
-        ConceptPackage pkg = packageRepository.findById(id).orElseThrow();
-        if (pkg.getBackgroundUrl() != null) fileStorageService.delete(pkg.getBackgroundUrl());
+            @RequestParam MultipartFile file) throws IOException {
+        ConceptPackage pkg = packageRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Package not found: " + id));
+        String oldUrl = pkg.getBackgroundUrl();
         pkg.setBackgroundUrl(fileStorageService.store(file, "packages"));
-        return ResponseEntity.ok(ApiResponse.ok("Background updated", packageRepository.save(pkg)));
+        ConceptPackage saved = packageRepository.save(pkg);
+        if (oldUrl != null) fileStorageService.delete(oldUrl);
+        return ResponseEntity.ok(ApiResponse.ok("Background updated", saved));
     }
 }
