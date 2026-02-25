@@ -20,6 +20,12 @@ public class OutfitController {
 
     private final OutfitService outfitService;
 
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<List<Outfit>>> getAdminAll() {
+        return ResponseEntity.ok(ApiResponse.ok(outfitService.getAll()));
+    }
+
     @GetMapping
     public ResponseEntity<ApiResponse<List<Outfit>>> getAll(
             @RequestParam(required = false) String type,
@@ -64,5 +70,20 @@ public class OutfitController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         outfitService.deleteOutfit(id);
         return ResponseEntity.ok(ApiResponse.ok("Outfit deleted", null));
+    }
+
+    @PostMapping(value = "/{id}/images", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<Outfit>> addImages(
+            @PathVariable Long id,
+            @RequestParam List<MultipartFile> images) throws Exception {
+        return ResponseEntity.ok(ApiResponse.ok("Images added", outfitService.addImages(id, images)));
+    }
+
+    @DeleteMapping("/images/{imageId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<Void>> removeImage(@PathVariable Long imageId) {
+        outfitService.removeImage(imageId);
+        return ResponseEntity.ok(ApiResponse.ok("Image deleted", null));
     }
 }

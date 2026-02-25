@@ -3,6 +3,7 @@ package com.caeline.rental.service;
 import com.caeline.rental.model.Outfit;
 import com.caeline.rental.model.OutfitImage;
 import com.caeline.rental.model.OutfitSize;
+import com.caeline.rental.repository.OutfitImageRepository;
 import com.caeline.rental.repository.OutfitRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -19,7 +20,12 @@ import java.util.Map;
 public class OutfitService {
 
     private final OutfitRepository outfitRepository;
+    private final OutfitImageRepository outfitImageRepository;
     private final FileStorageService fileStorageService;
+
+    public List<Outfit> getAll() {
+        return outfitRepository.findAll();
+    }
 
     public List<Outfit> getAllAvailable() {
         return outfitRepository.findByAvailableTrueOrderBySortOrderAscCreatedAtDesc();
@@ -91,5 +97,30 @@ public class OutfitService {
     @Transactional
     public void deleteOutfit(Long id) {
         outfitRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Outfit addImages(Long outfitId, List<MultipartFile> images) throws IOException {
+        Outfit outfit = getById(outfitId);
+        int nextOrder = outfit.getImages().size();
+        for (int i = 0; i < images.size(); i++) {
+            String url = fileStorageService.store(images.get(i), "outfits");
+            OutfitImage img = OutfitImage.builder()
+                .outfit(outfit)
+                .imageUrl(url)
+                .isPrimary(nextOrder == 0 && i == 0)
+                .sortOrder(nextOrder + i)
+                .build();
+            outfit.getImages().add(img);
+        }
+        return outfitRepository.save(outfit);
+    }
+
+    @Transactional
+    public void removeImage(Long imageId) {
+        OutfitImage image = outfitImageRepository.findById(imageId)
+            .orElseThrow(() -> new RuntimeException("Image not found: " + imageId));
+        fileStorageService.delete(image.getImageUrl());
+        outfitImageRepository.deleteById(imageId);
     }
 }

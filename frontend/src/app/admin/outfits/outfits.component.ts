@@ -173,8 +173,27 @@ import { Outfit } from '../../shared/models';
                 </label>
               </div>
 
+              <!-- Existing images (edit mode) -->
+              @if (editingOutfit && editingOutfit.images && editingOutfit.images.length > 0) {
+                <div>
+                  <label class="form-label">Current Images</label>
+                  <div class="flex gap-2 flex-wrap">
+                    @for (img of editingOutfit.images; track img.id) {
+                      <div class="relative group w-20 h-20 rounded-lg overflow-hidden border border-gray-200">
+                        <img [src]="img.imageUrl" [alt]="img.altText || ''" class="w-full h-full object-cover">
+                        <button (click)="deleteImage(img.id)"
+                                class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100
+                                       transition-opacity flex items-center justify-center text-white text-xs font-medium">
+                          Delete
+                        </button>
+                      </div>
+                    }
+                  </div>
+                </div>
+              }
+
               <div>
-                <label class="form-label">Upload Images</label>
+                <label class="form-label">{{ editingOutfit ? 'Add More Images' : 'Upload Images' }}</label>
                 <div class="border-2 border-dashed border-sakura-200 rounded-xl p-6 text-center cursor-pointer
                             hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
                      (click)="fileInput.click()">
@@ -234,7 +253,7 @@ export class AdminOutfitsComponent implements OnInit {
   ngOnInit() { this.loadOutfits(); }
 
   loadOutfits() {
-    this.api.getOutfits().subscribe({
+    this.api.getAdminOutfits().subscribe({
       next: outfits => { this.outfits.set(outfits); this.applyFilter(); this.loading.set(false); },
       error: () => this.loading.set(false)
     });
@@ -279,12 +298,30 @@ export class AdminOutfitsComponent implements OnInit {
     this.formError.set('');
 
     if (this.editingOutfit) {
-      this.api.updateOutfit(this.editingOutfit.id, this.form as any).subscribe({
+      const outfitId = this.editingOutfit.id;
+      this.api.updateOutfit(outfitId, this.form as any).subscribe({
         next: updated => {
-          this.outfits.update(list => list.map(o => o.id === updated.id ? updated : o));
-          this.applyFilter();
-          this.closeForm();
-          this.saving.set(false);
+          if (this.selectedFiles.length > 0) {
+            this.api.addOutfitImages(outfitId, this.selectedFiles).subscribe({
+              next: withImages => {
+                this.outfits.update(list => list.map(o => o.id === withImages.id ? withImages : o));
+                this.applyFilter();
+                this.closeForm();
+                this.saving.set(false);
+              },
+              error: () => {
+                this.outfits.update(list => list.map(o => o.id === updated.id ? updated : o));
+                this.applyFilter();
+                this.closeForm();
+                this.saving.set(false);
+              }
+            });
+          } else {
+            this.outfits.update(list => list.map(o => o.id === updated.id ? updated : o));
+            this.applyFilter();
+            this.closeForm();
+            this.saving.set(false);
+          }
         },
         error: () => { this.formError.set('Update failed'); this.saving.set(false); }
       });
@@ -303,6 +340,20 @@ export class AdminOutfitsComponent implements OnInit {
         error: () => { this.formError.set('Create failed'); this.saving.set(false); }
       });
     }
+  }
+
+  deleteImage(imageId: number) {
+    if (!confirm('Delete this image?')) return;
+    this.api.deleteOutfitImage(imageId).subscribe({
+      next: () => {
+        if (this.editingOutfit) {
+          this.editingOutfit = {
+            ...this.editingOutfit,
+            images: this.editingOutfit.images.filter(img => img.id !== imageId)
+          };
+        }
+      }
+    });
   }
 
   closeForm() {
