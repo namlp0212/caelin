@@ -5,11 +5,13 @@ import com.caeline.rental.model.ConceptPackage;
 import com.caeline.rental.model.TimeSlot;
 import com.caeline.rental.repository.ConceptPackageRepository;
 import com.caeline.rental.repository.TimeSlotRepository;
+import com.caeline.rental.service.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -21,6 +23,7 @@ public class PackageController {
 
     private final ConceptPackageRepository packageRepository;
     private final TimeSlotRepository timeSlotRepository;
+    private final FileStorageService fileStorageService;
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ConceptPackage>>> getAll() {
@@ -70,6 +73,8 @@ public class PackageController {
         pkg.setPhotographerFee(updated.getPhotographerFee());
         pkg.setMakeupFee(updated.getMakeupFee());
         pkg.setActive(updated.isActive());
+        if (updated.getThumbnailUrl() != null) pkg.setThumbnailUrl(updated.getThumbnailUrl());
+        if (updated.getBackgroundUrl() != null) pkg.setBackgroundUrl(updated.getBackgroundUrl());
         return ResponseEntity.ok(ApiResponse.ok("Package updated", packageRepository.save(pkg)));
     }
 
@@ -78,5 +83,27 @@ public class PackageController {
     public ResponseEntity<ApiResponse<Void>> delete(@PathVariable Long id) {
         packageRepository.deleteById(id);
         return ResponseEntity.ok(ApiResponse.ok("Package deleted", null));
+    }
+
+    @PostMapping(value = "/{id}/thumbnail", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<ConceptPackage>> uploadThumbnail(
+            @PathVariable Long id,
+            @RequestParam MultipartFile file) throws Exception {
+        ConceptPackage pkg = packageRepository.findById(id).orElseThrow();
+        if (pkg.getThumbnailUrl() != null) fileStorageService.delete(pkg.getThumbnailUrl());
+        pkg.setThumbnailUrl(fileStorageService.store(file, "packages"));
+        return ResponseEntity.ok(ApiResponse.ok("Thumbnail updated", packageRepository.save(pkg)));
+    }
+
+    @PostMapping(value = "/{id}/background", consumes = "multipart/form-data")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<ConceptPackage>> uploadBackground(
+            @PathVariable Long id,
+            @RequestParam MultipartFile file) throws Exception {
+        ConceptPackage pkg = packageRepository.findById(id).orElseThrow();
+        if (pkg.getBackgroundUrl() != null) fileStorageService.delete(pkg.getBackgroundUrl());
+        pkg.setBackgroundUrl(fileStorageService.store(file, "packages"));
+        return ResponseEntity.ok(ApiResponse.ok("Background updated", packageRepository.save(pkg)));
     }
 }
