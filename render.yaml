@@ -1,0 +1,28 @@
+services:
+  - type: web
+    name: caeline-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    healthCheckPath: /api/packages
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: caeline-db
+          property: jdbcUrl
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ALLOWED_ORIGINS
+        value: http://localhost:4200
+      - key: APP_BASE_URL
+        value: https://caeline-backend.onrender.com
+      - key: MAIL_USERNAME
+        value: namlp0212@gmail.com
+      - key: MAIL_PASSWORD
+        sync: false
+
+databases:
+  - name: caeline-db
+    databaseName: caeline
+    user: caeline
+    plan: free

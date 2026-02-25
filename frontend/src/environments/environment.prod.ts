@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.caeline.vn/api'
+  apiUrl: 'https://caeline-backend.onrender.com/api'
 };
