@@ -143,6 +143,50 @@ import { ConceptPackage } from '../../shared/models';
                 <span class="text-sm text-gray-700">Active (visible on website)</span>
               </label>
 
+              <!-- Thumbnail upload -->
+              <div>
+                <label class="form-label">Thumbnail Image</label>
+                <div class="flex items-start gap-4">
+                  @if (thumbnailPreview()) {
+                    <img [src]="thumbnailPreview()" alt="Thumbnail"
+                         class="w-24 h-16 object-cover rounded-xl border border-gray-200 flex-shrink-0">
+                  } @else {
+                    <div class="w-24 h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-2xl text-gray-300 flex-shrink-0">🖼️</div>
+                  }
+                  <div class="flex-1">
+                    <div class="border-2 border-dashed border-sakura-200 rounded-xl p-3 text-center cursor-pointer
+                                hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+                         (click)="thumbInput.click()">
+                      <p class="text-xs text-gray-500">{{ thumbnailFile ? thumbnailFile.name : 'Click to upload thumbnail' }}</p>
+                    </div>
+                    <input #thumbInput type="file" accept="image/*" class="hidden"
+                           (change)="onThumbnailSelected($event)">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Background upload -->
+              <div>
+                <label class="form-label">Background Image</label>
+                <div class="flex items-start gap-4">
+                  @if (backgroundPreview()) {
+                    <img [src]="backgroundPreview()" alt="Background"
+                         class="w-24 h-16 object-cover rounded-xl border border-gray-200 flex-shrink-0">
+                  } @else {
+                    <div class="w-24 h-16 rounded-xl border-2 border-dashed border-gray-200 flex items-center justify-center text-2xl text-gray-300 flex-shrink-0">🌄</div>
+                  }
+                  <div class="flex-1">
+                    <div class="border-2 border-dashed border-sakura-200 rounded-xl p-3 text-center cursor-pointer
+                                hover:border-sakura-400 hover:bg-sakura-50 transition-colors"
+                         (click)="bgInput.click()">
+                      <p class="text-xs text-gray-500">{{ backgroundFile ? backgroundFile.name : 'Click to upload background' }}</p>
+                    </div>
+                    <input #bgInput type="file" accept="image/*" class="hidden"
+                           (change)="onBackgroundSelected($event)">
+                  </div>
+                </div>
+              </div>
+
               <div class="flex gap-3 pt-2">
                 <button type="submit" class="btn-primary flex-1" [disabled]="saving()">
                   {{ saving() ? 'Saving...' : (editingPkg ? 'Update' : 'Create') }}
@@ -162,6 +206,10 @@ export class AdminPackagesComponent implements OnInit {
   showForm = signal(false);
   saving = signal(false);
   editingPkg: ConceptPackage | null = null;
+  thumbnailFile: File | null = null;
+  backgroundFile: File | null = null;
+  thumbnailPreview = signal<string>('');
+  backgroundPreview = signal<string>('');
 
   form = this.defaultForm();
 
@@ -186,6 +234,8 @@ export class AdminPackagesComponent implements OnInit {
       conceptType: pkg.conceptType, active: pkg.active,
     };
     this.showForm.set(true);
+    this.thumbnailPreview.set(pkg.thumbnailUrl || '');
+    this.backgroundPreview.set(pkg.backgroundUrl || '');
   }
 
   toggleActive(pkg: ConceptPackage) {
@@ -196,28 +246,74 @@ export class AdminPackagesComponent implements OnInit {
 
   savePkg() {
     this.saving.set(true);
-    const save$ = this.editingPkg
-      ? this.api.updatePackage(this.editingPkg.id, this.form as any)
+    const isEdit = !!this.editingPkg;
+    const save$ = isEdit
+      ? this.api.updatePackage(this.editingPkg!.id, this.form as any)
       : this.api.createPackage(this.form as any);
 
     save$.subscribe({
       next: pkg => {
-        if (this.editingPkg) {
-          this.packages.update(list => list.map(p => p.id === pkg.id ? pkg : p));
+        const uploadThumbnail$ = this.thumbnailFile
+          ? this.api.uploadPackageThumbnail(pkg.id, this.thumbnailFile)
+          : null;
+        const uploadBackground$ = this.backgroundFile
+          ? this.api.uploadPackageBackground(pkg.id, this.backgroundFile)
+          : null;
+
+        const finalize = (finalPkg: ConceptPackage) => {
+          if (isEdit) {
+            this.packages.update(list => list.map(p => p.id === finalPkg.id ? finalPkg : p));
+          } else {
+            this.packages.update(list => [...list, finalPkg]);
+          }
+          this.closeForm();
+          this.saving.set(false);
+        };
+
+        if (uploadThumbnail$ && uploadBackground$) {
+          uploadThumbnail$.subscribe({
+            next: withThumb => uploadBackground$.subscribe({
+              next: finalize,
+              error: () => { finalize(withThumb); }
+            }),
+            error: () => {
+              uploadBackground$?.subscribe({ next: finalize, error: () => { finalize(pkg); } });
+            }
+          });
+        } else if (uploadThumbnail$) {
+          uploadThumbnail$.subscribe({ next: finalize, error: () => { finalize(pkg); } });
+        } else if (uploadBackground$) {
+          uploadBackground$.subscribe({ next: finalize, error: () => { finalize(pkg); } });
         } else {
-          this.packages.update(list => [...list, pkg]);
+          finalize(pkg);
         }
-        this.closeForm();
-        this.saving.set(false);
       },
       error: () => this.saving.set(false)
     });
+  }
+
+  onThumbnailSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.thumbnailFile = file;
+    this.thumbnailPreview.set(URL.createObjectURL(file));
+  }
+
+  onBackgroundSelected(event: Event) {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (!file) return;
+    this.backgroundFile = file;
+    this.backgroundPreview.set(URL.createObjectURL(file));
   }
 
   closeForm() {
     this.showForm.set(false);
     this.editingPkg = null;
     this.form = this.defaultForm();
+    this.thumbnailFile = null;
+    this.backgroundFile = null;
+    this.thumbnailPreview.set('');
+    this.backgroundPreview.set('');
   }
 
   defaultForm() {
