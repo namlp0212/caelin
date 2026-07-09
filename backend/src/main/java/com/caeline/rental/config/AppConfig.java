@@ -1,6 +1,7 @@
 package com.caeline.rental.config;
 
 import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
@@ -12,6 +13,9 @@ import java.nio.file.Paths;
 @Configuration
 public class AppConfig implements WebMvcConfigurer {
 
+    @Value("${app.upload.dir}")
+    private String uploadDir;
+
     @Bean
     public ModelMapper modelMapper() {
         return new ModelMapper();
@@ -19,8 +23,8 @@ public class AppConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        Path uploadDir = Paths.get("./uploads");
-        String uploadPath = uploadDir.toFile().getAbsolutePath();
+        Path dir = Paths.get(uploadDir);
+        String uploadPath = dir.toFile().getAbsolutePath();
 
         registry.addResourceHandler("/files/**")
             .addResourceLocations("file:" + uploadPath + "/");
