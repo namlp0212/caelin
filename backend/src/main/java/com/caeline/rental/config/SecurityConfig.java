@@ -71,6 +71,7 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/packages", "/packages/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/outfits", "/outfits/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/reviews", "/reviews/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/reviews").permitAll()
                 .requestMatchers(HttpMethod.GET, "/banners", "/banners/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/instagram", "/instagram/**").permitAll()
                 .requestMatchers(HttpMethod.GET, "/files", "/files/**").permitAll()
