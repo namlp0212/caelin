@@ -41,9 +41,11 @@ public class Outfit {
 
     @OneToMany(mappedBy = "outfit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
     @OrderBy("sortOrder ASC")
+    @Builder.Default
     private List<OutfitImage> images = new ArrayList<>();
 
     @OneToMany(mappedBy = "outfit", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.EAGER)
+    @Builder.Default
     private List<OutfitSize> sizes = new ArrayList<>();
 
     @Column(updatable = false)

@@ -40,6 +40,6 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     java.math.BigDecimal sumRevenueInPeriod(@Param("from") LocalDateTime from, @Param("to") LocalDateTime to);
 
     @Query("SELECT b.conceptPackage.name, COUNT(b) as cnt FROM Booking b " +
-           "WHERE b.status NOT IN ('CANCELLED') GROUP BY b.conceptPackage.id ORDER BY cnt DESC")
+           "WHERE b.status NOT IN ('CANCELLED') GROUP BY b.conceptPackage.id, b.conceptPackage.name ORDER BY cnt DESC")
     List<Object[]> findPopularPackages();
 }
