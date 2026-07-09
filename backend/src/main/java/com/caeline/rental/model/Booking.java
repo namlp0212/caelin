@@ -28,17 +28,17 @@ public class Booking {
     @Column(nullable = false)
     private String customerPhone;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "package_id", nullable = false)
     private ConceptPackage conceptPackage;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "outfit_id")
     private Outfit outfit;
 
     private String outfitSize;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "time_slot_id", nullable = false)
     private TimeSlot timeSlot;
 
